@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: #f5f5f5;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .chat-container {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 400px; /* Fixed height to ensure scrollability */
+    }
+    
+    .message {
+      padding: 10px 15px;
+      border-radius: 18px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    
+    .message.other {
+      background-color: #f0f0f0;
+      align-self: flex-start;
+    }
+    
+    .message.self {
+      background-color: #0084ff;
+      color: white;
+      align-self: flex-end;
+    }
+    
+    .user-info {
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: #555;
+    }
+    
+    .message.self .user-info {
+      color: #e1f2ff;
+      text-align: right;
+    }
+    
+    .message-time {
+      font-size: 0.7em;
+      margin-top: 5px;
+      opacity: 0.7;
+    }
+    
+    .input-area {
+      display: flex;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-top: 1px solid #eaeaea;
+    }
+    
+    #message-input {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+      font-size: 16px;
+    }
+    
+    #send-button {
+      background-color: #0084ff;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 12px 20px;
+      margin-left: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    #send-button:hover {
+      background-color: #0073e6;
+    }
+    
+    .login-container {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      text-align: center;
+      max-width: 400px;
+      margin: auto;
+    }
+    
+    .login-container h2 {
+      margin-bottom: 20px;
+    }
+    
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .login-form input {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    
+    .login-form button {
+      background-color: #0084ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    
+    .login-form button:hover {
+      background-color: #0073e6;
+    }
+    
+    .user-info-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .user-greeting {
+      font-weight: bold;
+    }
+    
+    .logout-btn {
+      background-color: #f0f0f0;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .logout-btn:hover {
+      background-color: #e0e0e0;
+    }
+    
+    /* Added for better button visibility */
+    button {
+      cursor: pointer !important;
+      transition: background-color 0.2s;
+    }
+    
+    #login-button:active, #send-button:active, .logout-btn:active {
+      transform: scale(0.98);
+    }
+    
+    /* Status message styling */
+    .status-message {
+      text-align: center;
+      padding: 10px;
+      margin: 10px 0;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Public Chat Room</h1>
+    </div>
+    
+    <div id="login-section" class="login-container">
+      <h2>Enter Chat Room</h2>
+      <div class="login-form">
+        <input type="text" id="username-input" placeholder="Choose a username" required>
+        <button type="button" id="login-button">Join Chat</button>
+      </div>
+    </div>
+    
+    <div id="chat-section" style="display: none; flex: 1; display: flex; flex-direction: column;">
+      <div class="user-info-container">
+        <div class="user-greeting">Welcome, <span id="current-user">User</span>!</div>
+        <button class="logout-btn" id="logout-button">Logout</button>
+      </div>
+      
+      <div class="chat-container">
+        <div class="chat-messages" id="messages-container">
+          <!-- Messages will be displayed here -->
+          <div class="status-message">Welcome to the chat room! Messages will appear here.</div>
+        </div>
+        
+        <div class="input-area">
+          <input type="text" id="message-input" placeholder="Type a message...">
+          <button id="send-button">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.10.1/firebase-app.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/8.10.1/firebase-database.min.js"></script>
+  
+  <script>
+    // Firebase Configuration - REPLACE WITH YOUR CONFIG
+    const firebaseConfig = {
+  apiKey: "AIzaSyDgx8rr2KOH6rW-33Vh-nbJfDmCrd1vt8M",
+  authDomain: "hengkichatbot.firebaseapp.com",
+  databaseURL: "https://hengkichatbot-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "hengkichatbot",
+  storageBucket: "hengkichatbot.firebasestorage.app",
+  messagingSenderId: "5573094373",
+  appId: "1:5573094373:web:9fc119d0f5c25d35fddd0c",
+  measurementId: "G-JJHVYSPFBP"
+};
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    // DOM Elements
+    const loginSection = document.getElementById('login-section');
+    const chatSection = document.getElementById('chat-section');
+    const messagesContainer = document.getElementById('messages-container');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const loginButton = document.getElementById('login-button');
+    const usernameInput = document.getElementById('username-input');
+    const logoutButton = document.getElementById('logout-button');
+    const currentUserSpan = document.getElementById('current-user');
+    
+    // Current user information
+    let currentUser = null;
+    
+    // Login functionality
+    function loginUser() {
+      const username = usernameInput.value.trim();
+      if (username) {
+        currentUser = {
+          id: 'user_' + Date.now(),
+          name: username
+        };
+        
+        // Save user to session storage
+        sessionStorage.setItem('chatUser', JSON.stringify(currentUser));
+        
+        // Update UI
+        currentUserSpan.textContent = currentUser.name;
+        loginSection.style.display = 'none';
+        chatSection.style.display = 'flex';
+        
+        // Focus on message input
+        messageInput.focus();
+        
+        // Load messages
+        loadMessages();
+        
+        // Add a welcome message to the database
+        const welcomeMessage = {
+          userId: 'system',
+          userName: 'System',
+          text: `${username} has joined the chat`,
+          timestamp: Date.now()
+        };
+        database.ref('messages').push(welcomeMessage);
+        
+        console.log('Logged in as:', currentUser.name);
+      } else {
+        alert('Please enter a username');
+      }
+    }
+    
+    // Logout functionality
+    function logoutUser() {
+      if (currentUser) {
+        // Add a goodbye message to the database
+        const goodbyeMessage = {
+          userId: 'system',
+          userName: 'System',
+          text: `${currentUser.name} has left the chat`,
+          timestamp: Date.now()
+        };
+        database.ref('messages').push(goodbyeMessage);
+      }
+      
+      sessionStorage.removeItem('chatUser');
+      currentUser = null;
+      loginSection.style.display = 'block';
+      chatSection.style.display = 'none';
+      messagesContainer.innerHTML = '<div class="status-message">Welcome to the chat room! Messages will appear here.</div>';
+      console.log('Logged out');
+    }
+    
+    // Send message functionality
+    function sendUserMessage() {
+      const messageText = messageInput.value.trim();
+      if (messageText && currentUser) {
+        try {
+          const newMessage = {
+            userId: currentUser.id,
+            userName: currentUser.name,
+            text: messageText,
+            timestamp: Date.now()
+          };
+          
+          // Add to Firebase
+          const messagesRef = database.ref('messages');
+          messagesRef.push(newMessage)
+            .then(() => {
+              console.log('Message sent successfully');
+              // Clear input only after successful send
+              messageInput.value = '';
+            })
+            .catch((error) => {
+              console.error('Error sending message:', error);
+              alert('Failed to send message. Please try again.');
+            });
+          
+        } catch (error) {
+          console.error('Error in sendUserMessage function:', error);
+          alert('An error occurred while sending your message.');
+        }
+      } else {
+        if (!messageText) {
+          alert('Please type a message');
+        } else if (!currentUser) {
+          alert('You need to log in first');
+          loginSection.style.display = 'block';
+          chatSection.style.display = 'none';
+        }
+      }
+    }
+    
+    // Load and display messages
+    function loadMessages() {
+      try {
+        const messagesRef = database.ref('messages');
+        
+        // Clear existing messages
+        messagesContainer.innerHTML = '';
+        
+        // Show loading message
+        const loadingElement = document.createElement('div');
+        loadingElement.className = 'status-message';
+        loadingElement.textContent = 'Loading messages...';
+        messagesContainer.appendChild(loadingElement);
+        
+        // Listen for new messages
+        messagesRef.orderByChild('timestamp').limitToLast(50).on('child_added', (snapshot) => {
+          // Remove loading message if it exists
+          if (messagesContainer.querySelector('.status-message')) {
+            messagesContainer.innerHTML = '';
+          }
+          
+          const message = snapshot.val();
+          displayMessage(message);
+          
+          // Auto scroll to bottom
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, (error) => {
+          console.error('Error loading messages:', error);
+          messagesContainer.innerHTML = '<div class="status-message">Error loading messages. Please try again later.</div>';
+        });
+        
+        console.log('Messages loaded');
+      } catch (error) {
+        console.error('Error in loadMessages function:', error);
+        messagesContainer.innerHTML = '<div class="status-message">Error loading messages. Please try again later.</div>';
+      }
+    }
+    
+    // Display a message in the UI
+    function displayMessage(message) {
+      try {
+        const messageElement = document.createElement('div');
+        
+        // Handle system messages differently
+        if (message.userId === 'system') {
+          messageElement.className = 'status-message';
+          messageElement.textContent = message.text;
+          messagesContainer.appendChild(messageElement);
+          return;
+        }
+        
+        const isCurrentUser = currentUser && message.userId === currentUser.id;
+        
+        messageElement.className = `message ${isCurrentUser ? 'self' : 'other'}`;
+        
+        const userInfoElement = document.createElement('div');
+        userInfoElement.className = 'user-info';
+        userInfoElement.textContent = isCurrentUser ? 'You' : message.userName;
+        
+        const textElement = document.createElement('div');
+        textElement.textContent = message.text;
+        
+        const timeElement = document.createElement('div');
+        timeElement.className = 'message-time';
+        timeElement.textContent = formatTime(message.timestamp);
+        
+        messageElement.appendChild(userInfoElement);
+        messageElement.appendChild(textElement);
+        messageElement.appendChild(timeElement);
+        
+        messagesContainer.appendChild(messageElement);
+      } catch (error) {
+        console.error('Error displaying message:', error);
+      }
+    }
+    
+    // Format timestamp to readable time
+    function formatTime(timestamp) {
+      try {
+        const date = new Date(timestamp);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } catch (error) {
+        console.error('Error formatting time:', error);
+        return 'Unknown time';
+      }
+    }
+    
+    // Add event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Login button click handler
+      loginButton.addEventListener('click', loginUser);
+      
+      // Username input enter key handler
+      usernameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          loginUser();
+        }
+      });
+      
+      // Logout button click handler
+      logoutButton.addEventListener('click', logoutUser);
+      
+      // Send button click handler
+      sendButton.addEventListener('click', sendUserMessage);
+      
+      // Message input enter key handler
+      messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          sendUserMessage();
+        }
+      });
+      
+      // Check if user is already logged in
+      const savedUser = sessionStorage.getItem('chatUser');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          currentUserSpan.textContent = currentUser.name;
+          loginSection.style.display = 'none';
+          chatSection.style.display = 'flex';
+          loadMessages();
+          console.log('Auto-logged in as:', currentUser.name);
+        } catch (error) {
+          console.error('Error auto-logging in:', error);
+          sessionStorage.removeItem('chatUser');
+        }
+      }
+      
+      console.log('Event listeners set up');
+    });
+    
+    // Test database connection
+    function testDatabaseConnection() {
+      const connectionRef = database.ref('.info/connected');
+      connectionRef.on('value', function(snap) {
+        if (snap.val() === true) {
+          console.log('Connected to Firebase');
+        } else {
+          console.log('Not connected to Firebase');
+        }
+      });
+    }
+    
+    // Call the test function
+    testDatabaseConnection();
+    
+    console.log('Script loaded');
+  </script>
+</body>
+</html>
